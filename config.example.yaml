@@ -1,0 +1,17 @@
+interval: 5m
+
+# Path to the disk cache file.
+# Allows the application to resume state after restarting.
+# Default: ./cache.json
+# In container: /app/data/cache.json (with volume mounted in /app/data)
+cache_path: ./cache.json
+
+ntfy:
+  topic: foodtosave-alerts
+  server_url: https://ntfy.sh
+
+merchants:
+  - id: "merchant-id-1"
+    name: "Loja Centro"
+  - id: "merchant-id-2"
+    name: "Loja Bairro"

@@ -1,0 +1,13 @@
+services:
+  foodtosave-watcher:
+    build: .
+    container_name: foodtosave-watcher
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - foodtosave-data:/app/data
+    environment:
+      CONFIG_PATH: /app/config.yaml
+
+volumes:
+  foodtosave-data:

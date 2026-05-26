@@ -1,0 +1,6 @@
+.git
+tmp
+dist
+bin
+coverage
+*.log
