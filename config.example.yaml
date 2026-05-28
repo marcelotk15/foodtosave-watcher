@@ -6,9 +6,10 @@ interval: 5m
 # In container: /app/data/cache.json (with volume mounted in /app/data)
 cache_path: ./cache.json
 
-ntfy:
-  topic: foodtosave-alerts
-  server_url: https://ntfy.sh
+gotify:
+  server_url: https://gotify.example.com
+  # Token da Application (Apps no WebUI), não o token do Client.
+  app_token: seu-app-token
 
 merchants:
   - id: "merchant-id-1"

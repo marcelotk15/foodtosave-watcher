@@ -12,25 +12,24 @@ import (
 )
 
 const (
-	DefaultInterval      = 5 * time.Minute
-	DefaultNtfyServerURL = "https://ntfy.sh"
-	DefaultConfigPath    = "./config.yaml"
-	DefaultCachePath     = "./cache.json"
+	DefaultInterval   = 5 * time.Minute
+	DefaultConfigPath = "./config.yaml"
+	DefaultCachePath  = "./cache.json"
 )
 
 // Config is the root structure loaded from config.yaml.
 type Config struct {
 	Interval       DurationYAML  `yaml:"interval"`
-	Ntfy           NtfyConfig    `yaml:"ntfy"`
+	Gotify         GotifyConfig  `yaml:"gotify"`
 	Merchants      []Merchant    `yaml:"merchants"`
 	CachePath      string        `yaml:"cache_path"`
 	intervalParsed time.Duration `yaml:"-"`
 }
 
-// NtfyConfig defines the destination of notifications.
-type NtfyConfig struct {
-	Topic     string `yaml:"topic"`
+// GotifyConfig defines the destination of notifications.
+type GotifyConfig struct {
 	ServerURL string `yaml:"server_url"`
+	AppToken  string `yaml:"app_token"`
 }
 
 // Merchant represents a store in the Food To Save API.
@@ -111,19 +110,21 @@ func (c *Config) validateAndNormalize() error {
 		errs = append(errs, errors.New("merchants: at least one merchant is required"))
 	}
 
-	if strings.TrimSpace(c.Ntfy.Topic) == "" {
-		errs = append(errs, errors.New("ntfy.topic: required and cannot be empty"))
+	rawURL := strings.TrimSpace(c.Gotify.ServerURL)
+	if rawURL == "" {
+		errs = append(errs, errors.New("gotify.server_url: required and cannot be empty"))
+	} else {
+		u, err := url.Parse(rawURL)
+		if err != nil || u.Scheme == "" || u.Host == "" {
+			errs = append(errs, fmt.Errorf("gotify.server_url: invalid URL %q", c.Gotify.ServerURL))
+		} else {
+			c.Gotify.ServerURL = strings.TrimRight(rawURL, "/")
+		}
 	}
 
-	rawURL := strings.TrimSpace(c.Ntfy.ServerURL)
-	if rawURL == "" {
-		rawURL = DefaultNtfyServerURL
-	}
-	u, err := url.Parse(rawURL)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		errs = append(errs, fmt.Errorf("ntfy.server_url: invalid URL %q", c.Ntfy.ServerURL))
-	} else {
-		c.Ntfy.ServerURL = strings.TrimRight(rawURL, "/")
+	c.Gotify.AppToken = strings.TrimSpace(c.Gotify.AppToken)
+	if c.Gotify.AppToken == "" {
+		errs = append(errs, errors.New("gotify.app_token: required and cannot be empty"))
 	}
 
 	return errors.Join(errs...)

@@ -16,7 +16,9 @@ type CachedGondola struct {
 	Quantity          int       `json:"quantity"`
 	BagDescription    string    `json:"bag_description"`
 	BagCategory       string    `json:"bag_category"`
+	BagType           string    `json:"bag_type"`
 	BagPrice          float64   `json:"bag_price"`
+	BagReferencePrice float64   `json:"bag_reference_price"`
 	AvailabilityEndAt time.Time `json:"availability_end_at"`
 }
 

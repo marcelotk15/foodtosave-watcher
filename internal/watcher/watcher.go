@@ -17,11 +17,11 @@ const (
 	titleSoldOut      = "Sacola esgotada"
 )
 
-// Watcher orchestrates API query, diff, and ntfy sending.
+// Watcher orchestrates API query, diff, and notification sending.
 type Watcher struct {
 	cfg    *config.Config
 	api    *foodtosave.Client
-	notify *notifier.Notifier
+	notify notifier.Notifier
 	cache  *Cache
 	log    *slog.Logger
 }
@@ -33,7 +33,7 @@ func New(cfg *config.Config, log *slog.Logger) *Watcher {
 	return &Watcher{
 		cfg:    cfg,
 		api:    foodtosave.NewClient(),
-		notify: notifier.New(cfg.Ntfy.ServerURL, cfg.Ntfy.Topic),
+		notify: notifier.NewGotify(cfg.Gotify.ServerURL, cfg.Gotify.AppToken),
 		cache:  NewCache(cfg.CachePath),
 		log:    log,
 	}
@@ -64,7 +64,7 @@ func (w *Watcher) sendEvents(ctx context.Context, merchantName string, events []
 	for _, ev := range events {
 		title, body := formatNotification(merchantName, ev)
 		if err := w.notify.Send(ctx, title, body); err != nil {
-			w.log.Error("failed to send ntfy", "event", ev.Type, "gondola_id", ev.GondolaID, "err", err)
+			w.log.Error("failed to send notification", "event", ev.Type, "gondola_id", ev.GondolaID, "err", err)
 			continue
 		}
 		w.log.Info("notification sent", "event", ev.Type, "title", title, "gondola_id", ev.GondolaID)
@@ -83,7 +83,9 @@ func snapshotFromGondolas(list []foodtosave.Gondola) map[string]CachedGondola {
 			Quantity:          g.Quantity,
 			BagDescription:    g.Bag.Description,
 			BagCategory:       g.Bag.Category,
+			BagType:           g.Bag.Type,
 			BagPrice:          g.Bag.Price,
+			BagReferencePrice: g.Bag.ReferencePrice,
 			AvailabilityEndAt: g.AvailabilityEndAt,
 		}
 	}
@@ -99,14 +101,16 @@ func formatNotification(merchantName string, ev Event) (title string, body strin
 			`Nova sacola disponível em %s
 
 Sacola: %s
+Tipo: %s
 Categoria: %s
-Preço: R$ %.2f
+Preço: %s
 Quantidade: %d
 Disponível até: %s`,
 			merchantName,
 			s.BagDescription,
+			formatBagType(s.BagType),
 			s.BagCategory,
-			s.BagPrice,
+			formatPrice(s.BagPrice, s.BagReferencePrice),
 			s.Quantity,
 			formatAvailEndAt(s.AvailabilityEndAt),
 		)
@@ -139,6 +143,26 @@ Sacola: %s
 		body = ""
 	}
 	return title, body
+}
+
+func formatBagType(bagType string) string {
+	switch bagType {
+	case "SWEET":
+		return "Doce"
+	case "MIXED":
+		return "Misto"
+	case "SAVORY":
+		return "Salgado"
+	default:
+		return bagType
+	}
+}
+
+func formatPrice(price, referencePrice float64) string {
+	if referencePrice > price {
+		return fmt.Sprintf("de R$ %.2f por R$ %.2f", referencePrice, price)
+	}
+	return fmt.Sprintf("R$ %.2f", price)
 }
 
 func formatAvailEndAt(t time.Time) string {
