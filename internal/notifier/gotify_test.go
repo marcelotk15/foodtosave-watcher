@@ -52,6 +52,9 @@ func TestGotifyNotifierSend(t *testing.T) {
 	if got.Priority != defaultGotifyPriority {
 		t.Errorf("priority = %d, want %d", got.Priority, defaultGotifyPriority)
 	}
+	if got.Extras.ClientDisplay.ContentType != markdownContentType {
+		t.Errorf("extras.client::display.contentType = %q, want %q", got.Extras.ClientDisplay.ContentType, markdownContentType)
+	}
 }
 
 func TestGotifyNotifierSendErrorStatus(t *testing.T) {

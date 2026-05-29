@@ -11,12 +11,32 @@ import (
 	"time"
 )
 
-const defaultGotifyPriority = 5
+const (
+	defaultGotifyPriority = 5
+	markdownContentType   = "text/markdown"
+)
+
+type gotifyExtras struct {
+	ClientDisplay struct {
+		ContentType string `json:"contentType"`
+	} `json:"client::display"`
+}
 
 type gotifyPayload struct {
-	Title    string `json:"title"`
-	Message  string `json:"message"`
-	Priority int    `json:"priority"`
+	Title    string       `json:"title"`
+	Message  string       `json:"message"`
+	Priority int          `json:"priority"`
+	Extras   gotifyExtras `json:"extras"`
+}
+
+func newMarkdownPayload(title, body string) gotifyPayload {
+	p := gotifyPayload{
+		Title:    title,
+		Message:  body,
+		Priority: defaultGotifyPriority,
+	}
+	p.Extras.ClientDisplay.ContentType = markdownContentType
+	return p
 }
 
 // GotifyNotifier sends messages to a Gotify application.
@@ -35,11 +55,7 @@ func NewGotify(serverURL, appToken string) *GotifyNotifier {
 }
 
 func (g *GotifyNotifier) Send(ctx context.Context, title, body string) error {
-	payload, err := json.Marshal(gotifyPayload{
-		Title:    title,
-		Message:  body,
-		Priority: defaultGotifyPriority,
-	})
+	payload, err := json.Marshal(newMarkdownPayload(title, body))
 	if err != nil {
 		return fmt.Errorf("marshal gotify payload: %w", err)
 	}

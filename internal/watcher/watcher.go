@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	titleNewBag       = "Nova sacola disponível"
-	titleQtyDecreased = "Sacolas diminuíram"
-	titleSoldOut      = "Sacola esgotada"
+	titleNewBag       = "🛍️ Nova sacola disponível"
+	titleQtyDecreased = "📉 Sacolas diminuíram"
+	titleSoldOut      = "❌ Sacola esgotada"
 )
 
 // Watcher orchestrates API query, diff, and notification sending.
@@ -93,56 +93,56 @@ func snapshotFromGondolas(list []foodtosave.Gondola) map[string]CachedGondola {
 }
 
 func formatNotification(merchantName string, ev Event) (title string, body string) {
+	title = titleForEvent(ev.Type)
+	if ev.Type == "" {
+		return "Food To Save", ""
+	}
+
 	s := ev.Snapshot
+	body = fmt.Sprintf(
+		`**%s**
+
+📝 **Sacola:** %s
+🏷️ **Tipo:** %s
+📂 **Categoria:** %s
+💰 **Preço:** %s
+📦 **Quantidade:** %s
+⏰ **Disponível até:** %s`,
+		merchantName,
+		s.BagDescription,
+		formatBagType(s.BagType),
+		s.BagCategory,
+		formatPrice(s.BagPrice, s.BagReferencePrice),
+		formatQuantity(ev),
+		formatAvailEndAt(s.AvailabilityEndAt),
+	)
+	return title, body
+}
+
+func titleForEvent(t EventType) string {
+	switch t {
+	case EventNewBag:
+		return titleNewBag
+	case EventQuantityDecreased:
+		return titleQtyDecreased
+	case EventBagSoldOut:
+		return titleSoldOut
+	default:
+		return "Food To Save"
+	}
+}
+
+func formatQuantity(ev Event) string {
 	switch ev.Type {
 	case EventNewBag:
-		title = titleNewBag
-		body = fmt.Sprintf(
-			`Nova sacola disponível em %s
-
-Sacola: %s
-Tipo: %s
-Categoria: %s
-Preço: %s
-Quantidade: %d
-Disponível até: %s`,
-			merchantName,
-			s.BagDescription,
-			formatBagType(s.BagType),
-			s.BagCategory,
-			formatPrice(s.BagPrice, s.BagReferencePrice),
-			s.Quantity,
-			formatAvailEndAt(s.AvailabilityEndAt),
-		)
+		return fmt.Sprintf("%d", ev.NewQuantity)
 	case EventQuantityDecreased:
-		title = titleQtyDecreased
-		body = fmt.Sprintf(
-			`Sacolas diminuíram em %s
-
-Sacola: %s
-Quantidade anterior: %d
-Quantidade atual: %d`,
-			merchantName,
-			s.BagDescription,
-			ev.OldQuantity,
-			ev.NewQuantity,
-		)
+		return fmt.Sprintf("%d → %d", ev.OldQuantity, ev.NewQuantity)
 	case EventBagSoldOut:
-		title = titleSoldOut
-		body = fmt.Sprintf(
-			`Sacola esgotada em %s
-
-Sacola: %s
-Última quantidade vista: %d`,
-			merchantName,
-			s.BagDescription,
-			ev.OldQuantity,
-		)
+		return fmt.Sprintf("%d → 0", ev.OldQuantity)
 	default:
-		title = "Food To Save"
-		body = ""
+		return fmt.Sprintf("%d", ev.Snapshot.Quantity)
 	}
-	return title, body
 }
 
 func formatBagType(bagType string) string {
@@ -169,5 +169,5 @@ func formatAvailEndAt(t time.Time) string {
 	if t.IsZero() {
 		return "-"
 	}
-	return t.Format(time.RFC3339)
+	return t.Format("02/01/2006 às 15:04")
 }

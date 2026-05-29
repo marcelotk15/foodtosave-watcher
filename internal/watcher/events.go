@@ -47,20 +47,12 @@ func Diff(previous, current map[string]CachedGondola) []Event {
 				Snapshot:    prev,
 			})
 		case okPrev && okCur && cur.Quantity < prev.Quantity:
-			ev := CachedGondola{
-				GondolaID:         cur.GondolaID,
-				Quantity:          cur.Quantity,
-				BagDescription:    cur.BagDescription,
-				BagCategory:       cur.BagCategory,
-				BagPrice:          cur.BagPrice,
-				AvailabilityEndAt: cur.AvailabilityEndAt,
-			}
 			out = append(out, Event{
 				Type:        EventQuantityDecreased,
 				GondolaID:   id,
 				OldQuantity: prev.Quantity,
 				NewQuantity: cur.Quantity,
-				Snapshot:    ev,
+				Snapshot:    cur,
 			})
 		default:
 			// quantity equal or increase — no event
