@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/marcelotk15/foodtosave-watcher/compare/v1.0.0...v1.0.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* trigger release for docker publish workflow ([8e97609](https://github.com/marcelotk15/foodtosave-watcher/commit/8e97609d4ad83ed409aaaf974fa04698ac7494b3))
+
 ## 1.0.0 (2026-05-29)
 
 
