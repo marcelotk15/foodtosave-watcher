@@ -1,8 +1,21 @@
 services:
+  gotify:
+    image: gotify/server
+    container_name: gotify
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      GOTIFY_DEFAULTUSER_PASS: admin
+    volumes:
+      - gotify-data:/app/data
+
   foodtosave-watcher:
     build: .
     container_name: foodtosave-watcher
     restart: unless-stopped
+    depends_on:
+      - gotify
     volumes:
       - ./config.yaml:/app/config.yaml:ro
       - foodtosave-data:/app/data
@@ -11,3 +24,4 @@ services:
 
 volumes:
   foodtosave-data:
+  gotify-data:

@@ -38,13 +38,36 @@ air
 
 O projeto já inclui [`.air.toml`](.air.toml). O Air recompila e reinicia o watcher automaticamente ao salvar arquivos `.go`.
 
-**Docker Compose (recomendado para produção):**
+## Docker
+
+A imagem é publicada automaticamente no [GitHub Container Registry](https://github.com/marcelotk15/foodtosave-watcher/pkgs/container/foodtosave-watcher) a cada push na branch `main`:
 
 ```bash
-docker compose up --build
+docker pull ghcr.io/marcelotk15/foodtosave-watcher:latest
 ```
 
-No container, use `cache_path: /app/data/cache.json` para persistir o cache entre reinicializações.
+**Executar com `docker run`:**
+
+```bash
+docker run -d \
+  --name foodtosave-watcher \
+  --restart unless-stopped \
+  -v $(pwd)/config.yaml:/app/config.yaml:ro \
+  -v foodtosave-data:/app/data \
+  ghcr.io/marcelotk15/foodtosave-watcher:latest
+```
+
+**Executar com Docker Compose** (build local a partir do [repositório](https://github.com/marcelotk15/foodtosave-watcher)):
+
+```bash
+git clone https://github.com/marcelotk15/foodtosave-watcher.git
+cd foodtosave-watcher
+cp config.example.yaml config.yaml
+# edite config.yaml
+docker compose up -d --build
+```
+
+No container, use `cache_path: /app/data/cache.json` no `config.yaml` para persistir o cache entre reinicializações.
 
 ## Como testar
 
